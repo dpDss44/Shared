@@ -1,0 +1,111 @@
+<script runat="server">
+/*-------------CREATE WRITE FUNCTION-------------------*/ 
+  function Write(str) { Platform.Response.Write(str); }
+/*-------------CREATE STRINGIFY FUNCTION----------------*/
+function Stringify(obj) { return Platform.Function.Stringify(obj); }
+/*------------------------------------------*/
+var desToCheck = [ "20230419_DK_PRSP_MNDLN","20230419_DE_PRSP_MNDLN","20230419_FI_PRSP_MNDLN","20230419_AT_PRSP_MNDLN","20230419_FR_PRSP_MNDLN","20230419_IE_PRSP_MNDLN","20230419_UK_PRSP_MNDLN","20230419_CZ_PRSP_MNDLN","20230419_GR_PRSP_MNDLN","20230419_RO_PRSP_MNDLN","20230419_IT_PRSP_MNDLN","20230419_HU_PRSP_MNDLN","20230419_PT_PRSP_MNDLN","20230419_BE_PRSP_MNDLN","20230419_LU_PRSP_MNDLN","20230419_CH_PRSP_MNDLN","20230419_PL_PRSP_MNDLN","20230419_NO_PRSP_MNDLN","20230419_ES_PRSP_MNDLN","20230419_NL_PRSP_MNDLN","20230419_SE_PRSP_MNDLN","20230419_SK_PRSP_MNDLN","20230419_TR_PRSP_MNDLN"
+] // feed list of DEs we want to grab queries for ["deName1","deName2",...,"deNameN"] - NOTE - it does not matter if query and DE naming differs, the filter pulls based only on the target DE. We could run into a problem IIF there's more than one query targetting the same DE. I've yet to experience this with the one-off audiences.
+  
+try {
+  var prox = new Script.Util.WSProxy();  
+  // Set constants
+  var cols = ["DataExtensionTarget.Name","Name","TargetUpdateType","QueryText"];
+
+  //Retrieve to get Query Def
+  for(var i=0;i<desToCheck.length;i++){
+    var deName = desToCheck[i];
+    var filter = {
+      Property: "DataExtensionTarget.Name", 
+      SimpleOperator: "equals", 
+      Value: deName
+    };
+    var findQT = prox.retrieve("QueryDefinition",cols,filter);
+    if(findQT.Results) {
+      var qryText = findQT.Results[0].QueryText,
+          qrtTextFnl = qryText.replace(/AND/g,"<br>AND");//add linebreaks
+      qrtTextFnl = qrtTextFnl.replace(/,/g,", <br>");//add linebreaks
+      qrtTextFnl = qrtTextFnl.replace(/FROM ent.one_id/,"<br>FROM ent.one_id<br>");//add linebreaks
+      qrtTextFnl = qrtTextFnl.replace(/\) \)\)/,") <br>))");//add linebreaks
+      qrtTextFnl = qrtTextFnl.replace(/WHERE/,"<br>WHERE");//add linebreaks
+       qrtTextFnl = qrtTextFnl.replace(/SELECT/,"SELECT<br>");//add linebreaks
+      qrtTextFnl = qrtTextFnl.replace(/\(select/,"<br>(select");//add linebreaks
+      
+      Write("<br><br><b>"+findQT.Results[0].Name+"</b>"+"<br>");
+      Write("Target DE: "+findQT.Results[0].DataExtensionTarget.Name+" <br>");
+      Write("Target Type (Action): "+findQT.Results[0].TargetUpdateType+" <br>");      
+      Write("Query Text: <br>"+qrtTextFnl+"<br><br><br><br>");    
+    }//if results
+  }//loop
+
+} catch(e) {
+  Write(Stringify(e))
+}
+</script>
+<!DOCTYPE html>
+<html>
+<head>
+ <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+ <style class="main_style">
+.layout-canvas-g {
+  background-color: #fff;
+  border: none;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 0;
+  width: 100%;
+}
+.layout-canvas-g > .header,
+.layout-canvas-g > .section,
+.layout-canvas-g > .footer {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  word-wrap: break-word;
+}
+.layout-canvas-g > .section {
+  margin: 10px 0;
+}
+.layout-canvas-g > .section > .columns {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  word-wrap: break-word;
+}
+body {
+  color: #000;
+  font-family: Arial;
+  font-size: 12px;
+  margin: 0 auto;
+  max-width: 1280px;
+}
+@media only screen and (max-width: 480px) {
+  .mobile-hidden {
+    display: none !important;
+  }
+  .responsive-td {
+    width: 100% !important;
+    display: block !important;
+    padding: 0 !important;
+  }
+}
+.layout-canvas-g > .section > .columns {
+  width: 100%;
+}
+
+</style>
+
+</head>
+<body>
+<div class="layout layout-canvas-g">
+ <div class="section">
+  <div class="columns col1">
+   <div data-type="slot" data-key="col1"></div>
+  </div>
+ </div>
+</div>
+</body>
+</html>
+<script>(function(a,m,i,g,o,s){o=a.createElement(g);s=a.getElementsByTagName(i)[0];o.src=m.origin+m.pathname+"/_t?eventType=CLOUDPAGESVISIT";o.width=0;o.height=0;o.style.display="none";s.appendChild(o);})(document,window.location,"body","img");</script>

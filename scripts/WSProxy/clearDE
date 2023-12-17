@@ -1,0 +1,18 @@
+<script runat="server">
+    Platform.Load("core","1.1.5");
+  
+ try{   
+    var prox = new Script.Util.WSProxy();    
+    var action = "ClearData";
+    var props = {
+        CustomerKey: '######'  //CustomerKey of DE to be cleared
+    };
+    var opts = {};
+    var data = prox.performItem("DataExtension", props, action, opts);
+    Write("<br>result: " + Stringify(data)+"<br><br>");
+   
+   
+ }catch(e){
+  Write(Stringify(e)); 
+ }
+</script>

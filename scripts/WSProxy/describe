@@ -1,0 +1,56 @@
+<!--script runat=server> /* BASIC WAY, SPITS OUT RETRIEVABLE FIELDS IN AN ARRAY
+  Platform.Load("Core","1.1.5") ;
+  var prox = new Script.Util.WSProxy();
+// Pulls JSON of information on the structure of the object in question
+  // ex - Automation, DataExtension, DataFolder, QueryDefinition... (see following for available objects list: https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/soap_web_service_objects.html
+  
+//returns all retrievable columns from SOAP Object
+  function getRetrievableColumns(soapObjName) {
+    var desc = prox.describe(soapObjName);
+    var prop = desc.Results[0].Properties
+    var fieldArr = [];
+
+    for(i=0;i<prop.length; i++) {
+      var item = prop[i];
+      item.IsRetrievable ? fieldArr.push(item.Name) : '';
+    }
+
+    return fieldArr
+  }
+  
+//Write to page in a string all retrievable columns
+  //Replace "DataFolder" with the object for which you want to see available fields for
+  Write(Stringify(getRetrievableColumns("DataExtension")));
+  
+</script-->
+
+<script runat="server"> 
+/* CLEANER WAY, SPITS OUT RETRIEVABLE FIELDS IN A TABLE */
+
+  Platform.Load("Core","1.1.1");
+  try{ 
+    var prox = new Script.Util.WSProxy();
+    var soapObject = "Program"; //replace with soapObject to describe: DataExtension, Automation, QueryDefinition... etc
+    var data = prox.describe(soapObject) /* Replace 'DataExtension' with objects like below:
+    DataFolder, Program, Automation, QueryActivity, etc */
+    var resultProperties = data.Results[0].Properties;
+    Write('<table border="1" cellspacing="0" cellpadding="1" bordercolor="#000000" style="font-size:14px;color:#000000;font-family:Arial;"><tr><th align="center" colspan="2" style="padding:5px;">Object: ');
+      Write(soapObject);
+      Write('</th></tr><tr><th style="padding:3px;">Name</th><th style="padding:3px;">isRetrievable</th></tr>');
+
+    for ( i in resultProperties ) {
+      var colName = resultProperties[i].Name;
+      var Retrievable = resultProperties[i].IsRetrievable;
+
+      var color = (Retrievable == true) ? "#228C22" : "#8B0000";
+
+      Write("<tr>");
+      Write('<td style="padding:3px;">' + resultProperties[i].Name + "</td>");
+      Write('<td style="padding:3px;font-weight:bold;color:' + color + '">' + resultProperties[i].IsRetrievable + '</td>');       
+      Write("</tr>");
+    }
+    Write("</table>");
+  }catch(err){
+    Write(Stringify(err));
+  } 
+</script>

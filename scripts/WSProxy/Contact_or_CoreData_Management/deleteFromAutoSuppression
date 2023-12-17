@@ -1,0 +1,157 @@
+<script runat="server">
+  Platform.Load("core","1");
+  
+    var break2 = "<br><br>";
+
+  var controllerDeCK = '#####', // CustomerKey of DE to check and update
+      delRowDeCK = '#####'; // CK of DE to delete from
+
+  var prox = new Script.Util.WSProxy(); 
+
+  try{
+    var deReturn = retrieveDERows(controllerDeCK,reqID);
+    Write('deReturn: '+Stringify(deReturn)+break2);
+
+    var delBatches = createBatches(delRowDeCK,deReturn);
+    Write('delBatches: '+Stringify(delBatches)+break2);
+     
+    var delFromAS = delEntries(delRowDeCK,controllerDeCK,delBatches);
+    Write('delEntries: '+Stringify(delFromAS[0])+break2);
+    Write('updCntrlr: '+Stringify(delFromAS[1])+break2);
+    
+  }catch (e) {
+    Write("<br>e: " + Stringify(e));
+  }
+
+  
+//functions
+    //retrieveRecords
+    function retrieveDERows(deCustKey,reqID) {
+
+      var records = [],
+          cols = ["Email"]; //DE Column Name to be retrieved
+
+      var moreData = true, 
+          reqID = null;
+
+      if (reqID == null) {
+        var desc = prox.retrieve("DataExtensionObject[" + deCustKey + "]", cols); //executes the proxy call
+
+      } else {
+        desc = prox.getNextBatch("DataExtensionObject[" + deCustKey + "]", reqID);
+      }
+      
+      if (desc != null) {
+
+        moreData = desc.HasMoreRows;
+        reqID = desc.RequestID;
+
+        for (var i = 0; i < desc.Results.length; i++) {
+
+          var props = desc.Results[i].Properties;
+
+          records.push(wsUnpack(props));
+
+        }// i loop
+
+      }// data null check
+
+      return records;
+    }//retrieveRecords
+    
+    //wsUnpack
+    function wsUnpack(props) {
+
+        var out = {};
+
+        for(var k in props) {
+            var item = props[k];
+            //out[item.Name] = item.Value;
+          out["Email Address"] = item.Value;
+        }
+
+        return out;
+    }//wsUnpack
+    
+
+    //WSPack
+    function wsPack(obj) {
+
+      var out = [];
+
+      for (k in obj) {
+
+        out.push({
+          Name: k,
+          Value: obj[k]
+        });
+      }
+      return out;
+    }//WSPack
+
+    //createBatches
+    function createBatches(key, records) {
+
+      var batches = [];
+      
+
+      for (var k in records) {
+
+        batches.push({
+          CustomerKey: key,
+          Keys: wsPack(records[k])
+        });
+      }
+      return batches;
+    }//createBatches
+    
+    //Delete from Auto Suppression
+    function delEntries(toDelDeCK,logDeCK,batches) {
+
+      var suppDel = prox.deleteBatch("DataExtensionObject",batches);
+
+      var suppDelArr = [],
+          delEntRes = [];
+
+      for(var d=0;d<suppDel.Results.length;d++) {
+
+        var delKey = suppDel.Results[d].Object.Keys[0].Value,
+            delStatus = StatusCode == 'Error' ? suppDel.Results[d].StatusMessage : 'Deleted';
+
+        var delObjProps = [
+          {
+            Name:"Email",
+            Value:delKey
+          },
+          {
+            Name:"Deleted",
+            Value:delStatus
+          }
+        ];
+        
+        var delObj = {
+          CustomerKey:logDeCK,
+          Properties:delObjProps
+        };
+
+        suppDelArr.push(delObj);
+      }; // d loop
+
+      var options = {
+        SaveOptions: [
+          {
+            PropertyName: '*',
+            SaveAction: 'UpdateAdd'
+          }
+        ]
+      };
+
+      var updateToDel = prox.updateBatch("DataExtensionObject", suppDelArr, options);
+      
+      delEntRes.push(suppDel);
+      delEntRes.push(updateToDel);
+      
+      return delEntRes;
+
+    }//delEntries
+</script>

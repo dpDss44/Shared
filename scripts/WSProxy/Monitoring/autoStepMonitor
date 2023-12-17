@@ -1,0 +1,162 @@
+<script runat="server">
+
+  //get activity info
+  Platform.Load("Core","1");
+  var api = new Script.Util.WSProxy();
+  var break2 = '<br><br>';
+  try {
+    var AutomationName = "Disney_Hulu_Standalone_DIA";
+    var cols1 = ["ProgramID", "Name", "IsActive"];
+    var AiPgrmID;
+
+    var filter1 = {
+      Property: "Name",
+      SimpleOperator: "equals",
+      Value: AutomationName
+    };
+    // Retrieve Automation object
+    var request = api.retrieve("Automation", cols1, filter1);
+    //Write("Automation Res: "+Stringify(request)+"<br><br>");
+
+    if(request){
+      var AutomationObjectID = request.Results[0].ObjectID;
+
+      var cols3 = ["ProgramInstanceID","ObjectID","ProgramID","CustomerKey","Name","Description","Status","StatusMessage","StatusLastUpdate","IsActive","StartTime","CompletedTime","AutomationType","ScheduledTime"];
+      var filter3 = {
+        Property: "AutomationID",
+        SimpleOperator: "equals",
+        Value: AutomationObjectID
+      };
+      // Retrieve Activity object
+      var autoInstance = api.retrieve("AutomationInstance", cols3, filter3);
+      //Write("autoInstance: "+Stringify(autoInstance)+"<br><br>");
+
+      var autoName = autoInstance.Results[0].Name;
+
+      var tskInstncs = {};
+      Write("Automation: "+autoName+"<br>");
+      Write("No. times run: "+autoInstance.Results.length+"<br><br>");
+      Write("------------------------------------------<br><br>");
+      for(var k=0;k<autoInstance.Results.length;k++) {
+
+        var pObj = [],
+            o = {
+              "autoName": autoInstance.Results[k].Name,
+              "<br>TaskActivities": pObj
+            };
+
+        var autoName = autoInstance.Results[k].Name,
+            autoStart = Format(autoInstance.Results[k].StartTime,'G'),
+            autoEnd = Format(autoInstance.Results[k].CompletedTime,'G');
+
+        Variable.SetValue("@autoStart", autoStart);
+        Variable.SetValue("@autoEnd", autoEnd);
+        Variable.SetValue("@k", k);
+</script>
+%%[
+/* format dates */
+
+set @autoDur = DateDiff(@autoStart,@autoEnd,"MI")
+set @runNum = Add(@k,1)
+]%%
+<script runat="server">
+  var runNum = Variable.GetValue("@runNum");
+  var autoDur = Variable.GetValue("@autoDur");
+  Write("Run #: "+runNum+"<br>");
+  Write("autoStart Time: "+autoStart+"<br><br>");
+  Write("autoDuration (approx): "+autoDur+" mins<br><br>");
+
+  for(var h in autoInstance.Results[k].TaskInstances) {
+    for(var j in autoInstance.Results[k].TaskInstances[h].ActivityInstances) {
+
+      var actName = autoInstance.Results[k].TaskInstances[h].ActivityInstances[j].Name,
+          actStart = autoInstance.Results[k].TaskInstances[h].ActivityInstances[j].StartTime,
+          actEnd = autoInstance.Results[k].TaskInstances[h].ActivityInstances[j].CompletedTime;
+      Variable.SetValue("@actStart", actStart);
+      Variable.SetValue("@actEnd", actEnd);
+</script>
+%%[
+/* format dates */
+set @actStartTime = FormatDate(@actStart,"iso")
+set @actEndTime = FormatDate(@actEnd,"iso")
+set @actDuration = DateDiff(@actStartTime,@actEndTime,"MI")
+]%%
+<script runat="server">
+  var actDur = Variable.GetValue("@actDuration");
+  var actStartTime = Format(Variable.GetValue("@actStartTime"),'G');
+  var actEndTime = Format(Variable.GetValue("@actEndTime"),'G');
+  var actStatus = autoInstance.Results[k].TaskInstances[h].ActivityInstances[j].StatusMessage;
+  var actTypeID = autoInstance.Results[k].TaskInstances[h].ActivityInstances[j].PartnerKey;
+  var actType = activityLabeler(actTypeID);
+  var actStatusDisp = actStatus == 'Error' ?  '<span style="font-weight:bold;color:#f00;">'+actStatus+'</span>' : actStatus;
+
+
+  if(actDur < 1) {
+    var actDur = "< 1";
+  }
+  var pConfig = {
+    "<br>activityName": autoInstance.Results[k].TaskInstances[h].ActivityInstances[j].Name,
+    //"<br>activityStart": actStart,
+    //"<br>activityEnd": actEnd,
+    "<br>activityDuration": actDur+" mins<br>"
+  };
+  pObj.push(pConfig); 
+  Write("activityName: "+autoInstance.Results[k].TaskInstances[h].ActivityInstances[j].Name+"<br>");
+  Write("activityType: "+actType+"<br>");
+  Write("activityStatus: "+actStatusDisp+"<br>");
+  Write("activityStartTime: "+actStartTime+"<br>");
+  Write("activityEndTime: "+actEndTime+"<br>");
+  Write("activityDuration: "+actDur+" mins<br><br>");
+  }//j loop
+  }; //h loop
+
+  //Write("Item #"+k+" <br>"+Stringify(o)+"<br><br>");
+  Write("------------------------------------------<br><br><br>");
+  }; //k loop
+  //Write("autoInstance Res: "+Stringify(autoInstance)+"<br><br>");
+
+  }else{
+    Write('Automation has either not run, or does not exist.');
+  }
+
+  } catch(err) {
+    Write(Stringify(err));
+  }
+
+  //Functions
+  //activityLabeler
+  function activityLabeler(id) {
+    switch (id) {
+      case "33": return "SMS Activity";
+      case "42": return "Send Email";
+      case "43": return "Import File";
+      case "45": return "Refresh Group";
+      case "53": return "File Transfer";
+      case "73": return "Data Extract";
+      case "84": return "Report Definition";
+      case "300": return "SQL Query";
+      case "303": return "Filter";
+      case "423": return "Script";
+      case "425": return "Data Factory Utility Activity";
+      case "426": return "Refresh Segment Template";
+      case "427": return "Publish Audience";
+      case "467": return "Wait";
+      case "724": return "Refresh Mobile Filtered List";
+      case "725": return "Send SMS";
+      case "726": return "Import Mobile Contacts";
+      case "733": return "Journey Builder Event Activity";
+      case "736": return "Send Push";
+      case "749": return "Fire Event";
+      case "771": return "Salesforce Email Send";
+      case "772": return "Mobile Connect Send Salesforce Sync Subscriber";
+      case "783": return "Send GroupConnect";
+      case "952": return "Journey Builder Event Activity";
+      case "1000": return "Verification";
+      case "1010": return "Interaction Studio Data";
+      case "1101": return "Interactions";
+      case "1701": return "Batch Personalization";
+      case "3700": return "Contact to Business Unit Mapping";
+              };
+  };
+
+</script>

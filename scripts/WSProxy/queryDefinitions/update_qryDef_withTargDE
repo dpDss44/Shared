@@ -1,0 +1,85 @@
+<script runat="server">
+/*-------------CREATE WRITE FUNCTION-------------------*/ 
+  function Write(str) { Platform.Response.Write(str); }
+/*-------------CREATE STRINGIFY FUNCTION----------------*/
+function Stringify(obj) { return Platform.Function.Stringify(obj); }
+/*------------------------------------------*/
+
+  var break2 ="<br><br>";
+  var prox = new Script.Util.WSProxy();  
+  // Set constants
+
+  // We need to check that under the relevant parent folder, year and month folders exist (in that order), if not create each
+  // Placeholder objects
+  var folderObj =[], // !!!! might not use folder object, depends on how best to spin these up....
+      deObj = [],
+      qryObj = [],
+      deListObj = [],
+      qryListObj = [];
+      var options = {SaveOptions: [{'PropertyName': 'QueryText', SaveAction: 'UpdateAdd'}]};
+  // Set inputs - ideally fed in from form, or some input process... maybe excel concat?
+  var inputs = [
+    {"qryName":"emAddr_disparity2"},{"qryName":"emAddr_disparity3"},{"qryName":"emAddr_disparity4"},{"qryName":"emAddr_disparity5"},{"qryName":"emAddr_disparity6"}
+  ];
+
+
+try {
+  var prox = new Script.Util.WSProxy();  
+  // Set constants
+
+
+  //Retrieve to get Query Def
+  for(var i=0;i<inputs.length;i++){
+    var qryName = inputs[i].qryName;
+    
+
+      var retrvCols = ["Name","TargetUpdateType","CustomerKey","ObjectID","DataExtensionTarget.Name","DataExtensionTarget.CustomerKey"];
+    var QDFilter = {
+      Property: "Name", 
+      SimpleOperator: "equals", 
+      Value: qryName
+    };
+    
+
+    //Retrieve to get folder in loop i
+    var qryFRes = prox.retrieve("QueryDefinition",retrvCols,QDFilter);
+    //Write("qryFRes:<br>"+Stringify(qryFRes.Results[0])+"<br><br>");
+    var qryCustKey = qryFRes.Results[0].CustomerKey;
+    //Write("CustomerKey:<br>"+qryCustKey+"<br><br>");
+    var qryObjID = qryFRes.Results[0].ObjectID;
+    //Write("qryObjID:<br>"+qryObjID+"<br><br>");
+    var qryTargDEName = qryFRes.Results[0].DataExtensionTarget.Name;
+    //Write("qryObjID:<br>"+qryTargDEName+"<br><br>");
+    var qryTargDEKey = qryFRes.Results[0].DataExtensionTarget.CustomerKey;
+    //Write("qryObjID:<br>"+qryTargDEKey+"<br><br>");
+    
+    
+    var qryUpdateConfig = {
+      "ObjectID":qryObjID,
+      "CustomerKey":qryCustKey,
+      "DataExtensionTarget":{
+        "Name":"updEmAddr_controller",
+        "CustomerKey":'AC8891B6-BAAB-46D9-9B4E-849EE4DB73D7'
+      }
+    };
+
+     qryObj.push(qryUpdateConfig); // Push object into deObj to be created later
+    
+    
+    //update item
+   // var updQRes = prox.updateItem("QueryDefinition",qryUpdateConfig,options);
+
+
+  }//Loop
+  
+  Write("qryobj: "+Stringify(qryObj)+break2);
+
+  var updQRes = prox.updateBatch ("QueryDefinition", qryObj);
+  Write("updQRes:<br>"+Stringify(updQRes));
+  
+} catch(e) {
+  Write("ERROR:"+Stringify(e))
+}
+
+</script>
+<script>(function(a,m,i,g,o,s){o=a.createElement(g);s=a.getElementsByTagName(i)[0];o.src=m.origin+m.pathname+"/_t?eventType=CLOUDPAGESVISIT";o.width=0;o.height=0;o.style.display="none";s.appendChild(o);})(document,window.location,"body","img");</script>

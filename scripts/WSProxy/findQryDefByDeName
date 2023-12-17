@@ -1,0 +1,88 @@
+<script runat="server">
+/*-------------CREATE WRITE FUNCTION-------------------*/ 
+  function Write(str) { Platform.Response.Write(str); }
+/*-------------CREATE STRINGIFY FUNCTION----------------*/
+function Stringify(obj) { return Platform.Function.Stringify(obj); }
+/*------------------------------------------*/
+  Platform.Load("Core","1.1.1");
+  
+/**
+ * Polyfill for Object.keys
+ *
+ * @see: https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/keys
+ */
+if (!Object.keys) {
+  Object.keys = (function () {
+    var hasOwnProperty = Object.prototype.hasOwnProperty,
+        hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+        dontEnums = [
+          'toString',
+          'toLocaleString',
+          'valueOf',
+          'hasOwnProperty',
+          'isPrototypeOf',
+          'propertyIsEnumerable',
+          'constructor'
+        ],
+        dontEnumsLength = dontEnums.length;
+ 
+    return function (obj) {
+      if (typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object');
+ 
+      var result = [];
+ 
+      for (var prop in obj) {
+        if (hasOwnProperty.call(obj, prop)) result.push(prop);
+      }
+ 
+      if (hasDontEnumBug) {
+        for (var i=0; i < dontEnumsLength; i++) {
+          if (hasOwnProperty.call(obj, dontEnums[i])) result.push(dontEnums[i]);
+        }
+      }
+      return result;
+    }
+  })()
+};
+  //END Object.keys polyfill
+  
+  try {
+    var prox = new Script.Util.WSProxy();  
+    // Set constants
+    var deName = 'blue02'; // Name of DE for which we're finding the Qry Def of
+    var cols = ["DataExtensionTarget.Name","Name","TargetType","CustomerKey"];
+    var filter = {
+      Property: "DataExtensionTarget.Name", 
+      SimpleOperator: "equals", 
+      Value: deName
+    };
+
+    //Retrieve to get Query Def
+    var findQD = prox.retrieve("QueryDefinition",cols,filter);
+    var findQDResults = findQD.Results[0];
+    Write("Stringify findQD: "+Stringify(findQD)+"<br><br>");
+    Write("Stringify findQDResults: "+Stringify(findQDResults)+"<br><br>");
+    
+    Write("Write cols[0]:"+cols[0]+"<br><br>");
+Write("Stringify findQDResults[0]: "+Stringify(findQDResults.Name)+"<br><br>");
+    
+    
+    var obj =[];
+    for (var key in findQDResults) {
+      if (Object.prototype.hasOwnProperty.call(findQDResults, key)) {
+        var val = findQDResults[key];
+        // use val
+        if(val) {
+        obj.push(val);
+        }
+      }
+    } 
+    Write("objKeys: "+Stringify(obj));
+
+    
+
+  } catch(e) {
+    Write(Stringify(e))
+  }
+
+</script>

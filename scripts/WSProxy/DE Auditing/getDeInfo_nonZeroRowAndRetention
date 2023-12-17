@@ -1,0 +1,76 @@
+<script runat="server">
+/*-------------CREATE WRITE FUNCTION-------------------*/ 
+  function Write(str) { Platform.Response.Write(str); }
+/*-------------CREATE STRINGIFY FUNCTION----------------*/
+function Stringify(obj) { return Platform.Function.Stringify(obj); }
+/*------------------------------------------*/
+   Platform.Load("core", "1");
+  
+try {
+  var prox = new Script.Util.WSProxy();  
+  // Set constants
+  var cols = ["Name","SendableDataExtensionField.Name","SendableSubscriberField.Name","DataRetentionPeriodLength","RowBasedRetention","DeleteAtEndOfRetentionPeriod","DataRetentionPeriod"];
+
+  var filter = {
+    LeftOperand: {
+      Property: "CategoryID", 
+      SimpleOperator: "equals", 
+      Value: 365698
+    },
+    LogicalOperator: "AND",
+    RightOperand: {
+      Property: "IsSendable", 
+      SimpleOperator: "equals", 
+      Value: true
+    }
+  };
+  var findDE = prox.retrieve("DataExtension",cols,filter);
+
+  Write('<div style="padding-top:20px;"><b style="font-size:16px;">Retrieve non-zero row sendable DE&rsquo;s rowcount and their retention info.</b></div><br><br><br>');
+
+  for(var i=0;i<findDE.Results.length;i++){
+    var deName= findDE.Results[i].Name,
+        rc = getRC();
+
+    function getRC(d) { //get rowcount so we can skip 0 entry DEs; Only works locally, if global is needed, do api call (not baked in here)
+      Variable.SetValue("@deName",deName);
+
+      var scr = "";
+      scr += "\%\%[";
+      scr += "set @rc = DataExtensionRowCount(@deName)";
+      scr += "Output(Concat(@rc))";
+      scr += "]\%\%";
+      return Platform.Function.TreatAsContent(scr);
+    }//function
+    
+    if(rc>0){
+
+      var sndDeFld = findDE.Results[i].SendableDataExtensionField.Name,
+          sndSubFld = findDE.Results[i].SendableSubscriberField.Name,
+          retLen = (findDE.Results[i].DataRetentionPeriodLength ? "" : ""),
+          delRet = findDE.Results[i].DeleteAtEndOfRetentionPeriod,
+          retPrd = findDE.Results[i].DataRetentionPeriod,
+          rowRet= findDE.Results[i].RowBasedRetention,
+          
+          retType = (rowRet ? "Specific rows deleted":"All entries deleted");
+          //retSetting = if(delRet ? "Deletes entire DE after"+retLen+" "+delRet : "NOPE");
+      //retSetting = if(delRet ? "Deletes entire DE after"+retLen+" "+delRet : retType+" after "+retLen+" "+retPrd);
+      
+      Write("deName: "+deName+"<br>");
+      Write("delRet: "+delRet+"<br>");
+      Write("retPrd: "+retPrd+"<br>");
+      Write("rowCount: "+rc+"<br>");
+      Write("Send Relationship: "+sndDeFld+" relates to subscribers on "+sndSubFld+"<br>");
+      Write("Retention setting: "+retSetting+"<br><br>");
+      Write("---------------------------------------------------------<br><br><br>")
+    }else{
+      Write(deName+": Zero sendable files retrieved given filter.<br><br>");
+      Write("---------------------------------------------------------<br><br><br>")
+    };
+  };
+
+} catch(e) {
+  Write(Stringify(e))
+}
+
+</script>

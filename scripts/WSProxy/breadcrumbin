@@ -1,0 +1,44 @@
+<script runat="server">
+  Platform.Load("Core","1");
+  try{
+
+    //var dename = Request.GetQueryStringParameter("DE");
+    var dename = '20230110_US_XYZ_FR';
+    var prox = new Script.Util.WSProxy();
+    var cols = ["Name","CustomerKey","CategoryID"];
+    var filter = {
+      Property: "Name",
+      SimpleOperator: "like",
+      Value: dename
+    };
+
+    var desc = prox.retrieve("DataExtension", cols, filter);
+    Write("<u>Data Extensions containing the word(s):</u> <b>"+dename+" </b> <br><br>");
+    for (i = 0; i < desc.Results.length; i++) {    
+      var findcatid = desc.Results[i].CategoryID;
+      var folderpath = desc.Results[i].Name;
+      do {
+        var colsb = ["Name","ID","ParentFolder.ID"];
+        var filterb = {
+          Property: "ID",
+          SimpleOperator: "equals",
+          Value: findcatid
+        };
+
+        var descb = prox.retrieve("DataFolder", colsb, filterb);
+        findcatid = descb.Results[0].ParentFolder.ID;
+        folderpath = descb.Results[0].Name + " > " + folderpath;
+      }
+      while (findcatid != 0);
+
+      Write(" "+folderpath+'<br><br>');
+
+      //Write(Found: "+folderpath+'<br>');
+    }
+  }
+
+catch(error) {
+
+    Write('<b>MESSAGE: Append ?DE= and the Data Extension name to the end of the URL and refresh</b> <br>(ex: <CLOUD PAGE URL>?DE=welcome)');
+  }
+  </script>

@@ -1,0 +1,70 @@
+<script runat="server">
+  Platform.Load("core","1.1.5");
+  var prox = new Script.Util.WSProxy(),
+      break1 = "<br>",
+      break2 = "<br><br>";
+
+  try{
+
+    var dedupedArr = [];
+    
+    var testArr = [{val:'a',stuff:'123'},{val:'b',stuff:'456'},{val:'c',stuff:'789'},{val:'d',stuff:'012'},{val:'a',stuff:'035'},{val:'a',stuff:'068'},{val:'e',stuff:'123'}];
+    
+    
+    /// output unique autoName(s) into array
+    var outputArray = [];
+    // Count variable is used to add the new unique value only once in the outputArray.
+    var count = 0;
+
+    // Start variable is used to set true if a repeated duplicate value is encontered in the output array.
+    var start = false;
+
+    for (var p = 0; p < testArr.length; p++) {
+      for (var q = 0; q < outputArray.length; q++) {
+        if ( testArr[p].val == outputArray[q] ) {  
+          start = true;
+        }
+      }
+      count++;
+      if (count == 1 && start == false) {
+        outputArray.push(testArr[p].val);
+      }
+      start = false;
+      count = 0;
+    }
+    Write("outputArray len: "+outputArray.length+"<br><br>");
+    Write("outputArray: "+Stringify(outputArray)+"<br><br>");
+
+    // polyfill: filter
+    Array.prototype.filter = function(c) {
+      if (c && {}.toString.call(c) === '[object Function]') {
+        f = c;
+        var a = [];
+        for(i=0;i<this.length;i++) {
+          if (f(this[i]) == true) { a.push(this[i]) }
+        }
+        return a;
+      } else {
+        return {"Error": "Filter provided is not a function"};
+      }
+    }
+    // end polyfill: filter
+  
+    for(var o=0;o<outputArray.length;o++) {
+      var oaVal = outputArray[o];
+      var arrFiltered = testArr.filter(function(e){return e.val === oaVal});
+    
+      //Write(Stringify(arrFiltered)+break2);
+      dedupedArr.push(arrFiltered[0])
+      
+    }// o loop
+    
+    Write('dedupedArrL '+Stringify(dedupedArr)+break2);
+    
+    
+
+  }catch(e){
+   Write(Stringify(e)); 
+  }
+    
+</script>

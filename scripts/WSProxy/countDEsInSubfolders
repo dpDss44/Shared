@@ -1,0 +1,130 @@
+<script runat="server">
+  Platform.Load("core","1");
+  var prox = new Script.Util.WSProxy(); 
+  var break2 = '<br><br>';
+
+  try{
+    var queryAllAccounts = true,
+        result = [],
+        k = 0;
+
+    var writeToDE = 'deAudit_toDeleteFldrDeCount'; // NAME of output DE
+    var catIDArr = [{CategoryID:######}]; // catID of folder to observe
+
+    var catID = catIDArr[0].CategoryID;
+
+    var cols = ["Name","ID","ParentFolder.ID","ObjectID"];
+    var filter = {
+      Property: "ID",
+      SimpleOperator: "equals",
+      Value: catID
+    };
+
+    var data = prox.retrieve("DataFolder", cols, filter,queryAllAccounts);
+    //Write('data: '+Stringify(data)+break2);
+
+    var objID = data.Results[k].ObjectID,
+        name = data.Results[k].Name;
+
+    var deCols = ["CustomerKey"];
+    var deFilter = {
+      Property: "CategoryID",
+      SimpleOperator: "equals",
+      Value: catID
+    };
+
+    var deData = prox.retrieve("DataExtension", deCols, deFilter,queryAllAccounts);
+
+    var deCount = deData.Results.length;
+
+    //Using platform function, push data back into associated audit DE and update existing rows
+    var nameArr = ["deCount"];
+    // Array of Non Primary Key names to pass to Data Extension as Column Names
+
+    var valueArr = [deCount];
+    //Array of Non Primary Key values to pass to Data Extension as Column Values
+
+    var upsertDeInfo = Platform.Function.UpsertData(writeToDE, ["ObjectID","CategoryID","Name"], [objID,catID,name], nameArr, valueArr);
+    //Upserts the pulled value into the data extension, using the above primary keys
+
+
+    do{
+
+      Write('k: '+k+break2);
+      Write('catIDARR len: '+catIDArr.length+break2);
+      Write('catIDARR: '+Stringify(catIDArr)+break2);
+      var catID = catIDArr[k].CategoryID;
+
+      //check for subfolders
+      var cols = ["Name","ID","ParentFolder.ID","ObjectID"];
+      var filter = {
+        Property: "ParentFolder.ID",
+        SimpleOperator: "equals",
+        Value: catID
+      };
+
+      var data2 = prox.retrieve("DataFolder", cols, filter,queryAllAccounts);
+      //Write('data2: '+Stringify(data2)+break2);
+
+      if(data2 != null && data2.Results != null){
+
+        for(var j in data2.Results){
+          var objID = data2.Results[j].ObjectID,
+              catID2 = data2.Results[j].ID,
+              name = data2.Results[j].Name;
+
+          catIDArr.push({CategoryID:catID2});
+
+           
+            var deCols = ["CustomerKey"];
+            var deFilter = {
+              Property: "CategoryID",
+              SimpleOperator: "equals",
+              Value: catID2
+            };
+
+            var deData2 = prox.retrieve("DataExtension", deCols, deFilter,queryAllAccounts);
+
+            var deCount2 = deData2.Results.length;
+
+            //Using platform function, push data back into associated audit DE and update existing rows
+            var nameArr = ["deCount"];
+            // Array of Non Primary Key names to pass to Data Extension as Column Names
+
+            var valueArr = [deCount2];
+            //Array of Non Primary Key values to pass to Data Extension as Column Values
+
+            var upsertDeInfo2 = Platform.Function.UpsertData(writeToDE, ["ObjectID","CategoryID","Name"], [objID,catID2,name], nameArr, valueArr);
+            //Upserts the pulled value into the data extension, using the above primary keys
+            
+        }// j loop
+
+      }//check if any results in the next round of retrieves
+
+      k++;
+      }while (k <= catIDArr.length);
+    //}while (k <= 20);
+
+    Write('k: '+k+break2);
+    Write('catIDARR len: '+catIDArr.length+break2);
+    Write('catIDARR: '+Stringify(catIDArr)+break2);
+
+  }catch(e){
+    Write(Stringify(e)); 
+  }
+  //WSUnpack
+  function wsUnpack(props) {
+
+    var out = {};
+
+    for(var k in props) {
+
+      var item = props[k];
+
+      out[item.Name] = item.Value;
+    }
+    return out;
+  }//WSUnpack
+
+
+</script>

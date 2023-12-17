@@ -1,0 +1,33 @@
+<script runat="server">
+Platform.Load("Core","1.1.5") ;
+
+  var break2 = '<br><br>';
+  
+  try{
+
+  
+  var array = [
+  { Name: 'watch1', country: 'US',date:"6/14/2023 2:42:09 PM" },
+  { Name: 'watch2', country: 'US',date:"6/15/2023 10:07:01 AM" },
+  { Name: 'MX1', country: 'MX',date:"6/15/2023 12:43:05 PM" }
+]
+
+ var sortie = array.sort(function(x, y) { //this function transforms the existing array
+  if (x.date > y.date) {
+    return -1;
+  }
+  if (x.date < y.date) {
+    return 1;
+  }
+  return 0;
+ });
+  
+ Write(Stringify(sortie)+break2);
+    Write(Stringify(array));
+  
+    
+  }catch(e){
+    Write(Stringify(e));
+  }
+    
+</script>

@@ -1,0 +1,259 @@
+<script runat="server">
+/*-------------CREATE WRITE FUNCTION-------------------*/ 
+  function Write(str) { Platform.Response.Write(str); }
+/*-------------CREATE STRINGIFY FUNCTION----------------*/
+function Stringify(obj) { return Platform.Function.Stringify(obj); }
+/*------------------------------------------*/
+  Platform.Load("core", "1");
+
+  var deCols = ["Name","CustomerKey","CategoryID","IsSendable","Client.ID","ObjectID","CreatedDate","ModifiedDate","IsTestable"],
+      fldrCols = ["Name","ParentFolder.Name","ID","ParentFolder.ID","Client.ID"],
+      break2 = "<br><br>",
+      break4 = "<br><br><br><br>",
+      receiveDE = "#######", // CK of DE we add output to
+      updateDeConfig = [],
+      deHoldr = [];
+
+  var prox = new Script.Util.WSProxy();
+  prox.setClientId({ // Set userID and MID to avoid permissions issues
+    "ID": ###### // ideally parent bu
+  });
+
+  try {
+
+    var filterPoC = {
+      LeftOperand: {
+        Property: "CategoryID", 
+        SimpleOperator: "equals", 
+        Value: "365698" //for PoC we're using the following directory: Data Extensions>B2C Engagement>Test Files>2020
+      },
+      LogicalOperator: "AND",
+      RightOperand: {
+        Property: "IsSendable", 
+        SimpleOperator: "equals", 
+        Value: "false"
+      }
+    };
+    
+        var filterA = { // this times out via cloudpage - use script activity in automation
+      Property: "IsSendable", 
+      SimpleOperator: "equals", 
+      Value: "false"
+    },
+        filterB = {//Filter to get non-sendable DEs only 
+          LeftOperand: {
+            Property: "CategoryID", 
+            SimpleOperator: "notEquals", 
+            Value: "374563" //deAuditing folder
+          },
+          LogicalOperator: "AND",
+          RightOperand: {
+            Property: "CategoryID", 
+            SimpleOperator: "notEquals", 
+            Value: "####" //deAuditing subfolder
+          }
+        },
+
+        filter = { //Complex filter to leverage both filterA and filterB
+          LeftOperand: filterA,
+          LogicalOperator: "AND",
+          RightOperand: filterB
+        };
+    var deRetRes = prox.retrieve("DataExtension",deCols,filterPoC); //Retrieve de data
+    //Write("deRetRes Len: "+deRetRes.Results.length+break2);
+    //Write("deRetRes: "+Stringify(deRetRes.Results)+break2);
+
+    for(i=0;i<deRetRes.Results.length;i++) {
+      var deName = deRetRes.Results[i].Name,
+          deCatID = deRetRes.Results[i].CategoryID;
+
+      var rc = getRC();
+
+      function getRC(d) { //get rowcount so we can skip 0 entry DEs; Only works locally, if global is needed, do an API call (not avail here)
+        Variable.SetValue("@deName",deName);
+
+        var scr = "";
+        scr += "\%\%[";
+        scr += "set @rc = DataExtensionRowCount(@deName)";
+        scr += "Output(Concat(@rc))";
+        scr += "]\%\%";
+        return Platform.Function.TreatAsContent(scr);
+
+      }//function
+
+      if(rc>0){ //Condition to remove DEs with zero rows
+        if(deName.indexOf("QueryStudioResults") < 0 && deName.indexOf("_DeleteTracking") < 0) {//Condition to remove Query Studio & contact delete DEs
+  
+// Field info - looking for sub key based fields, then log to a new array
+          var deMid = deRetRes.Results[i].Client.ID,
+              deCK = deRetRes.Results[i].CustomerKey,
+              isSendable = deRetRes.Results[i].IsSendable,
+              isTestable = deRetRes.Results[i].IsTestable,
+              deCreateDate = deRetRes.Results[i].CreatedDate,
+              deModifiedDate = deRetRes.Results[i].ModifiedDate,
+              fkArr = [],
+              fldHldr = [],
+              fkString = ["email","emailaddr","email_address","email address","subscriberkey","subscriber key","subscriber_key","usr_contact_key","contact_key","usr contact key","usrcontactkey"],
+              fieldKey,
+              hasEA = false,
+              inArr = false,
+              deFieldCols = ["Name","IsRequired", "FieldType", "DefaultValue"],
+              deFieldFltr = {
+                Property: "DataExtension.CustomerKey",
+                SimpleOperator: "equals",
+                Value: deCK
+              };
+
+          var getDeInfo = prox.retrieve("DataExtensionField",deFieldCols,deFieldFltr), //Retrieve de fields
+              getDeInfoRes = getDeInfo.Results;
+        
+//Write("getDeInfo["+deName+"]: "+Stringify(getDeInfo.Results)+break2);
+
+          for(var k=0;k<getDeInfoRes.length;k++){ //check if there are matches to a specific known fieldKey that contains an emailaddr
+            var fldName = getDeInfoRes[k].Name.toLowerCase(),
+                fldType = getDeInfoRes[k].FieldType;
+
+            if(fldType == 'EmailAddress'){ hasEA = true; };//fldType check
+            
+            for(var z in fkString){
+              var fStrVal = fkString[z];
+              if(fStrVal == fldName){
+                fldHldr.push(fldName); 
+                inArr = true;
+              };//string check
+            };//z loop
+            
+          };//k loop
+          Write("deInfo["+deName+"]: "+Stringify(fldHldr)+break2);
+          
+          if(inArr){
+            var deCleanConfig = {
+              "deMid":deMid,
+              "deCK":deCK,
+              "deName":deName,
+              "isSendable":isSendable,
+              "isTestable": isTestable,
+              "deCreateDate":deCreateDate,
+              "deModifiedDate":deModifiedDate,
+              "deCatID":deCatID,
+              "fieldKey":fldHldr,
+              "hasEA":hasEA
+            };
+            //push each row into arr to be created in receiving DE
+            deHoldr.push(deCleanConfig);
+          };//inArr check
+        };//Condition to remove Query Studio results
+      };//Condition to remove DEs with zero rows
+    };//i loop
+
+Write("deHoldr["+deHoldr.length+"]: "+Stringify(deHoldr)+break2);
+
+    for(b in deHoldr) {
+      for(var l=0;l<deHoldr[b].length;l++) {
+        var deCatID = deHoldr[b].deCatID;
+//Breadcrumbin
+        var fldrFilter = {
+          Property:"ID",
+          SimpleOperator:"equals",
+          Value:deCatID
+        },
+            breadCrumbin = prox.retrieve("DataFolder",fldrCols,fldrFilter),
+            breadID = breadCrumbin.Results[0].ID,
+            breadHolder = [],
+            notRoot = true;
+
+        // must check for ID pulling from the dataFolder retrieve; it was discovered some folders are inaccessible and do not pull an ID, leaving it undefined, thus causing issues with subsequent retrieves
+
+        if(breadID){
+          // Get folder breadcrumbs for DE      
+          while (notRoot === true) {
+            var bcFltr = {
+              Property:"ID",
+              SimpleOperator:"equals",
+              Value:breadID
+            };
+            var fldrRes = prox.retrieve("DataFolder",fldrCols,bcFltr),
+                bcName = fldrRes.Results[0].Name,
+                breadID = fldrRes.Results[0].ParentFolder.ID;
+            if(breadID == 0) {
+              var notRoot = false;
+              breadHolder.push(bcName)
+            }else{
+              breadHolder.push(bcName)
+            };//root check
+          };//while
+        }//folderID check
+
+        var breadString = breadHolder.reverse().join(' > ');
+        deHoldr[b].breadCrum = breadString;
+        //Write("breadString: "+breadString+break2);
+//end breadcrumbin
+      };//l loop
+      
+// set up row configurations and push into updateDeConfig
+      var deRowConfig = [],
+          dePropConfig = [
+            {
+              Name:'DE Name',
+              Value:deHoldr[b].deName
+            },
+            {
+              Name:'CustomerKey',
+              Value:deHoldr[b].deCK
+            },
+            {
+              Name:'MID',
+              Value:deHoldr[b].deMid
+            },
+            {
+              Name:'fieldKey',
+              Value:deHoldr[b].fieldKey.join(', ')
+            },
+            {
+              Name:'IsSendable',
+              Value:deHoldr[b].isSendable
+            },
+            {
+              Name:'IsTestable',
+              Value:deHoldr[b].isTestable
+            },
+            {
+              Name:'CreatedDate',
+              Value:deHoldr[b].deCreateDate
+            },          
+            {
+              Name:'ModifiedDate',
+              Value:deHoldr[b].deModifiedDate
+            },
+            {
+              Name:'BreadCrumbs',
+              Value:deHoldr[b].breadCrum
+            },
+            {
+              Name:'hasEmailAddrType',
+              Value:deHoldr[b].hasEA
+            }
+          ];
+
+          var deRowArr = {
+            CustomerKey: receiveDE,
+            Properties: dePropConfig
+          };
+      updateDeConfig.push(deRowArr);
+    };//b loop
+    
+//Write("updateDeConfig: "+Stringify(updateDeConfig)+break2);
+
+/*
+    var options = {SaveOptions: [{'PropertyName': '*', SaveAction: 'UpdateAdd'}]};
+    var res = prox.createBatch('DataExtensionObject', updateDeConfig);
+    
+    Write("creation status: "+Stringify(res)+break4);
+
+*/
+
+
+  } catch(e) {
+    Write(Stringify(e))
+  }
+</script>

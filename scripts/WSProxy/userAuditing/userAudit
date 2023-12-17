@@ -1,0 +1,135 @@
+<script runat="server" language="javascript">
+/*
+Requires 3 DEs, see the following for details
+https://charliefay.medium.com/sfmc-account-user-audit-check-roles-and-permissions-via-api-c14356be0114
+*/
+
+  Platform.Load("core","1.1");
+  var prox = new Script.Util.WSProxy();
+
+  try {
+    var usersInformationTable = "USERS_INFORMATION";
+    var usersRolesTable       = "USERS_ROLES";
+    var usersPermissionsTable = "USERS_PERMISSIONS";
+
+    var queryAllAccounts = true;
+    var cols = [
+      "AccountUserID",
+      "ActiveFlag",
+      "CustomerKey",
+      "Email",
+      "ID",
+      "LastSuccessfulLogin",
+      "ModifiedDate",
+      "Name",
+      "Roles",
+      "UserID",
+      "UserPermissions"
+    ];
+    /* var filter = { // specific user filter
+            Property: "Email",
+            SimpleOperator: "equals",
+            Value: "charlie@email.com.au"
+    };*/
+
+    // WSProxy retrieve
+    var res = prox.retrieve("AccountUser", cols/*, filter*/);
+
+    if (res.Status == "OK") {
+
+      var resultUsers = res.Results;
+
+      for (i in resultUsers) {
+
+       
+        var rows = Platform.Function.InsertData(usersInformationTable,
+                                                ["AccountUserID",
+                                                 "Name",
+                                                 "UserID",
+                                                 "Email",
+                                                 "NotificationEmailAddress",
+                                                 "ActiveFlag",
+                                                 "Delete",
+                                                 "LastSuccessfulLogin",
+                                                 "IsAPIUser",
+                                                 "IsLocked",
+                                                 "ID",
+                                                 "CustomerKey"],
+                                                [resultUsers[i].AccountUserID,
+                                                 resultUsers[i].Name,
+                                                 resultUsers[i].UserID,
+                                                 resultUsers[i].Email,
+                                                 resultUsers[i].NotificationEmailAddress,
+                                                 resultUsers[i].ActiveFlag,
+                                                 resultUsers[i].Delete,
+                                                 resultUsers[i].LastSuccessfulLogin,
+                                                 resultUsers[i].IsAPIUser,
+                                                 resultUsers[i].IsLocked,
+                                                 resultUsers[i].ID,
+                                                 resultUsers[i].CustomerKey]);
+/*                                                
+
+
+        var userRoles = resultUsers[i].Roles;
+        for (j in userRoles) {
+         
+          var rows = Platform.Function.InsertData(usersRolesTable,
+                                                  ["AccountUserID",
+                                                   "Name",
+                                                   "Description",
+                                                   "CustomerKey",
+                                                   "IsSystemDefined",
+                                                   "ObjectID"],
+                                                  [resultUsers[i].AccountUserID,
+                                                   userRoles[j].Name,
+                                                   userRoles[j].Description,
+                                                   userRoles[j].CustomerKey,
+                                                   userRoles[j].IsSystemDefined,
+                                                   userRoles[j].ObjectID]);
+                                                  
+
+          var cols_roles = ["Permissions"];
+          var filter_roles = {
+            Property: "ObjectID",
+            SimpleOperator: "equals",
+            Value: userRoles[j].ObjectID
+          };
+
+
+                var resRoles = prox.retrieve("Role", cols_roles, filter_roles);
+
+                for (var k=0; k<resRoles.Results.length; k++) {
+
+                    var permissionsArray = resRoles.Results[k].Permissions;
+
+                    for (x in permissionsArray) {
+                        var rows = Platform.Function.InsertData(usersPermissionsTable,
+                                                          ["AccountUserID",
+                                                           "Name",
+                                                           "Description",
+                                                           "ObjectType",
+                                                           "ID",
+                                                           "IsAllowed",
+                                                           "IsDenied",
+                                                           "IsShareable"],
+                                                          [resultUsers[i].AccountUserID,
+                                                           permissionsArray[x].Name,
+                                                           permissionsArray[x].Description,
+                                                           permissionsArray[x].ObjectType,
+                                                           permissionsArray[x].ID,
+                                                           permissionsArray[x].IsAllowed,
+                                                           permissionsArray[x].IsDenied,
+                                                           permissionsArray[x].IsShareable]);
+                    } // x loop
+                } // k loop
+
+
+        } // j loop
+*/        
+      } // i loop
+    } // initial retrieve status check
+    
+  } catch (error) {
+    Write(Stringify(error));
+  }
+</script>

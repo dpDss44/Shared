@@ -1,0 +1,192 @@
+<script runat="server">
+  Platform.Load("core","1.1.5");
+  var prox = new Script.Util.WSProxy(),
+      break1 = "<br>",
+      break2 = "<br><br>",
+      queryAllAccounts = true,
+      assetArr = [],
+      autoStatus = {
+        "-1":"Error",
+        "0":"BuildingError",
+        "1":"Building",
+        "2":"Ready",
+        "3":"Running",
+        "4":"Paused",
+        "5":"Stopped",
+        "6":"Scheduled",
+        "7":"Awaiting Trigger",
+        "8":"InactiveTrigger"
+      };
+
+  // REPLACE VALUE WITH THE DE NAME YOU WANT TO SEARCH FOR
+  var sourceDE = "#####";
+
+  try{
+
+    //get DE obj ID for importActivity check
+    var deCols = ["Customerkey","ObjectID"];
+    var deFilter = {
+      Property: "Name",
+      SimpleOperator: "equals",
+      Value: sourceDE
+    };
+
+    var deData = prox.retrieve("DataExtension", deCols, deFilter,queryAllAccounts); 
+
+    if(deData.Results){
+      var deObjID = deData.Results[0].ObjectID;
+
+      //Check for associated fileImportActivities where destination is the sourceDE objectID
+      var deCols = ["Name","Client.ClientID1"];
+      var deFilter = {
+        Property: "DestinationObject.ObjectID",
+        SimpleOperator: "equals",
+        Value: deObjID
+      };
+
+      var faImprtData = prox.retrieve("ImportDefinition", deCols, deFilter,queryAllAccounts);
+      //Write('faImprtData: '+Stringify(faImprtData)+break2);
+
+      for(var i=0;i<faImprtData.Results.length;i++){
+
+        var faImprtName = faImprtData.Results[i].Name;
+        var faImprtClientID = faImprtData.Results[i].Client.ClientID1;
+
+        //Write("ImportActivity MID: "+faImprtClientID+break1);
+        //Write('ImportActivity Name: <b style="color:red;">'+faImprtName+"</b>"+break2);
+
+        //batch up for audit de
+        assetArr.push({'name':faImprtName});
+
+      }// i loop
+    }
+
+    //check if sourceDE is either target DE OR used in queryText of queryDefinition
+    //Check for query definitions containing reference to the context DE (target DE OR queryText)
+    var cols = ["Name","CategoryID","DataExtensionTarget.Name","QueryText","CreatedDate","ModifiedDate","CategoryID","TargetUpdateType","Status","Client.ID","CustomerKey"];
+    var filterAll = {
+      LeftOperand: {
+        Property: "QueryText",
+        SimpleOperator: "like",
+        Value: sourceDE
+      },
+      LogicalOperator: "OR",
+      RightOperand: {
+        Property: "DataExtensionTarget.Name",
+        SimpleOperator: "equals",
+        Value: sourceDE
+      }
+    };
+
+    var filterTargOnly = {
+      Property: "DataExtensionTarget.Name",
+      SimpleOperator: "equals",
+      Value: sourceDE
+    };
+
+    //exclude queries prefixed/affixed with 'DEV' in the query text
+    var srcNotA = "DEV_"+sourceDE,
+        srcNotB = sourceDE+"_DEV";
+
+    var data = prox.retrieve("QueryDefinition", cols, filterAll,queryAllAccounts);
+    //Write("data.Results len: "+data.Results.length+break2);
+    //Write("data.Results: "+Stringify(data.Results)+break2);
+
+    if(data.Results){
+      
+      var json = data.Results;
+
+      for(i=0;i<json.length;i++){ //push query names into array
+        var name = json[i].Name,
+            qryTxt = json[i].QueryText;
+
+        if(!qryTxt.indexOf(srcNotA) && !qryTxt.indexOf(srcNotB)) {
+
+          assetArr.push({"Name":name});
+
+        }
+
+      }// i loop
+      //Write("assetArr: "+Stringify(assetArr)+break2);
+      Write("assetArr Len: "+assetArr.length+break2);
+
+      for(var l in assetArr){ // loop through each query name to associate with corresponding activity(ies)
+        var qryName = assetArr[l].Name;
+
+
+        var cols = ["Name","Client.ID","Program.ObjectID","Task.ObjectID","CustomerKey","ObjectID"],
+            filter = {
+              Property:"Name",
+              SimpleOperator:"equals",
+              Value: qryName
+            };
+        var data = prox.retrieve("Activity", cols,filter,queryAllAccounts);
+        //Write("data: "+data.Results.length+break2);
+        //Write("data: "+Stringify(data)+break2);   
+
+
+        for(var j=0;j<data.Results;j++){
+          //Write("data ["+j+"] :"+Stringify(data.Results[j])+break2);
+
+          var objID = data.Results[j].Program.ObjectID;
+
+          var cols2 = ["Name","ObjectID","Client.ID","Status"];
+          var filter1 = {
+            Property: "ObjectID",
+            SimpleOperator: "equals",
+            Value: objID
+          };
+
+          var request = prox.retrieve("Program", cols2, filter1,queryAllAccounts);
+          //Write("request: "+Stringify(request)+break2);
+          //Write("request len: "+request.Results.length+break2);
+
+          var autoName = request.Results[0].Name;
+
+          prox.setClientId({ "ID": request.Results[0].Client.ID}); // Automation Object require MID context
+
+          var cols3 = ["Name","ProgramID","Client.ID","IsActive","Status","AutomationType","LastRunTime","ScheduledTime"];
+          var filter3 = {
+            Property: "Name",
+            SimpleOperator: "equals",
+            Value: autoName
+          };
+
+          var autoReq = prox.retrieve("Automation", cols3, filter3,queryAllAccounts);
+          //Write("autoReq: "+Stringify(autoReq)+break2);
+
+          var autoType = autoReq.Results[0].AutomationType;
+          var autoSched = autoReq.Results[0].ScheduledTime;
+          var autoLastRun = autoReq.Results[0].LastRunTime;
+          var getStatus = autoReq.Results[0].Status,
+              status = autoStatus[getStatus];
+
+          prox.resetClientIds();
+
+          for(var k = 0;k<request.Results.length;k++) {
+
+            Write("Source DE: <b>"+sourceDE+"</b>"+break1);
+            Write("MID: "+request.Results[k].Client.ID+break1);
+            Write('Automation: <b style="color:red;">'+request.Results[k].Name+"</b>"+break1);
+            Write('Type: '+autoType+break1);
+            if(autoType == 'scheduled' && status == 'Scheduled' ){
+              Write('Schedule: '+autoSched+break1);
+            }
+            Write('Status: '+status+break1);
+            Write('Last Run: '+autoLastRun+break1);
+            Write("Acivity Name: "+data.Results[j].Name+break2);
+
+          }// k loop
+
+        }// j loop
+
+      }// l loop
+
+    }else{
+      Write('DE does not exist in any automations'); 
+    }
+
+  }catch(e){
+    Write(Stringify(e));
+  }
+</script>
