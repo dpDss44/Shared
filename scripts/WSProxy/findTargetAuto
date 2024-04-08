@@ -19,7 +19,7 @@
       };
 
   // REPLACE VALUE WITH THE DE NAME YOU WANT TO SEARCH FOR
-  var sourceDE = "ssssss";
+  var sourceDE = "Contact_salesforce";
 
   try{
 
@@ -31,7 +31,7 @@
       Value: sourceDE
     };
 
-    var deData = prox.retrieve("DataExtension", deCols, deFilter,queryAllAccounts); 
+    var deData = prox.retrieve("DataExtension", deCols, deFilterByStatus,queryAllAccounts); 
 
     if(deData.Results){
       var deObjID = deData.Results[0].ObjectID;
@@ -108,7 +108,7 @@
 
       }// i loop
       //Write("assetArr: "+Stringify(assetArr)+break2);
-      Write("assetArr Len: "+assetArr.length+break2);
+      //Write("assetArr Len: "+assetArr.length+break2);
 
       for(var l in assetArr){ // loop through each query name to associate with corresponding activity(ies)
         var qryName = assetArr[l].Name;
@@ -151,31 +151,55 @@
             SimpleOperator: "equals",
             Value: autoName
           };
+          
 
+          var autoFilterByStatus = {
+            LeftOperand: {
+              Property: "Name",
+              SimpleOperator: "equals",
+              Value: autoName
+            },
+            LogicalOperator: "AND",
+            RightOperand: {
+              Property: "Status",
+              SimpleOperator: "IN",
+              Value: ['3','6','1','7']
+            }
+          };
+          
+          
           var autoReq = prox.retrieve("Automation", cols3, filter3,queryAllAccounts);
-          //Write("autoReq: "+Stringify(autoReq)+break2);
+          Write("autoReq: "+Stringify(autoReq)+break2);
 
-          var autoType = autoReq.Results[0].AutomationType;
-          var autoSched = autoReq.Results[0].ScheduledTime;
-          var autoLastRun = autoReq.Results[0].LastRunTime;
-          var getStatus = autoReq.Results[0].Status,
+          var autoType = autoReq.Results[0].AutomationType,
+              autoSched = autoReq.Results[0].ScheduledTime,
+              autoLastRun = autoReq.Results[0].LastRunTime,
+              getStatus = autoReq.Results[0].Status,
               status = autoStatus[getStatus];
 
           prox.resetClientIds();
 
           for(var k = 0;k<request.Results.length;k++) {
+            
+            var statusArr = [1,3,6,7];
+            var statusChk = inArr(getStatus,statusArr);
+            Write(statusChk+break2);
+            
+            if(statusChk){
 
-            Write("Source DE: <b>"+sourceDE+"</b>"+break1);
-            Write("MID: "+request.Results[k].Client.ID+break1);
-            Write('Automation: <b style="color:red;">'+request.Results[k].Name+"</b>"+break1);
-            Write('Type: '+autoType+break1);
-            if(autoType == 'scheduled' && status == 'Scheduled' ){
-              Write('Schedule: '+autoSched+break1);
-            }
-            Write('Status: '+status+break1);
-            Write('Last Run: '+autoLastRun+break1);
-            Write("Acivity Name: "+data.Results[j].Name+break2);
-
+              Write("Source DE: <b>"+sourceDE+"</b>"+break1);
+              Write("MID: "+request.Results[k].Client.ID+break1);
+              Write('Automation: <b style="color:red;">'+request.Results[k].Name+"</b>"+break1);
+              Write('Type: '+autoType+break1);
+              if(autoType == 'scheduled' && status == 'Scheduled' ){
+                Write('Schedule: '+autoSched+break1);
+              }
+              Write('Status: '+status+break1);
+              Write('Last Run: '+autoLastRun+break1);
+              Write("Acivity Name: "+data.Results[j].Name+break2);
+              
+            }// check if status is within statusArr range
+   
           }// k loop
 
         }// j loop
@@ -189,4 +213,24 @@
   }catch(e){
     Write(Stringify(e));
   }
+  
+  //FUNCTIONS
+  
+  //inArr
+  function inArr(val,arr){
+    
+    Array.includes = function(value,array) {
+      var ret;
+      for(i=0;i<arr.length;i++){
+        if (!ret || ret == false){ret = val == arr[i] ? true: false;}
+      }
+      return ret;
+    };
+
+    var bool = Array.includes(val,arr);
+    
+    return bool;
+  };
+  //inArr
+  
 </script>
