@@ -19,7 +19,7 @@
       };
 
   // REPLACE VALUE WITH THE DE NAME YOU WANT TO SEARCH FOR
-  var sourceDE = "Contact_salesforce";
+  var sourceDE = "ssssssss";
 
   try{
 
@@ -169,7 +169,7 @@
           
           
           var autoReq = prox.retrieve("Automation", cols3, filter3,queryAllAccounts);
-          Write("autoReq: "+Stringify(autoReq)+break2);
+          //Write("autoReq: "+Stringify(autoReq)+break2);
 
           var autoType = autoReq.Results[0].AutomationType,
               autoSched = autoReq.Results[0].ScheduledTime,
@@ -183,7 +183,6 @@
             
             var statusArr = [1,3,6,7];
             var statusChk = inArr(getStatus,statusArr);
-            Write(statusChk+break2);
             
             if(statusChk){
 
@@ -232,5 +231,7 @@
     return bool;
   };
   //inArr
+  
+  
   
 </script>
