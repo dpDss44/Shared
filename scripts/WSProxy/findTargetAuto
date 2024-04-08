@@ -181,10 +181,11 @@
 
           for(var k = 0;k<request.Results.length;k++) {
             
+            //Check status of automation
             var statusArr = [1,3,6,7];
             var statusChk = inArr(getStatus,statusArr);
             
-            if(statusChk){
+            if(statusChk){ //Only Write when the status of auto is within the statusArr range
 
               Write("Source DE: <b>"+sourceDE+"</b>"+break1);
               Write("MID: "+request.Results[k].Client.ID+break1);
