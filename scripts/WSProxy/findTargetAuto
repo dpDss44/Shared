@@ -23,6 +23,8 @@
 
   try{
 
+    Write("Source DE: <b>"+sourceDE+"</b>"+break2);
+
     //get DE obj ID for importActivity check
     var deCols = ["Customerkey","ObjectID"];
     var deFilter = {
@@ -187,9 +189,8 @@
             
             if(statusChk){ //Only Write when the status of auto is within the statusArr range
 
-              Write("Source DE: <b>"+sourceDE+"</b>"+break1);
-              Write("MID: "+request.Results[k].Client.ID+break1);
               Write('Automation: <b style="color:red;">'+request.Results[k].Name+"</b>"+break1);
+              Write("MID: "+request.Results[k].Client.ID+break1);
               Write('Type: '+autoType+break1);
               if(autoType == 'scheduled' && status == 'Scheduled' ){
                 Write('Schedule: '+autoSched+break1);
