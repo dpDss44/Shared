@@ -86,6 +86,12 @@
       Value: sourceDE
     };
 
+    var qryTxtgOnly = {
+      Property: "QueryText",
+      SimpleOperator: "like",
+      Value: sourceDE
+    };
+
     //exclude queries prefixed/affixed with 'DEV' in the query text
     var srcNotA = "DEV_"+sourceDE,
         srcNotB = sourceDE+"_DEV";
