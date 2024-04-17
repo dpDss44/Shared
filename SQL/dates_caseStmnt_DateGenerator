@@ -1,0 +1,151 @@
+Select
+/* 1 Days after Entry */
+CASE WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 3, GETDATE()), 101) 
+ELSE CONVERT(varchar, DATEADD(day, 1, GETDATE()), 101) 
+END as email_1DAfterEntry
+/* 2 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 4, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 4, GETDATE()), 101)     
+ELSE CONVERT(varchar, DATEADD(day, 2, GETDATE()), 101)
+END as email_2DAfterEntry
+/* 3 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 5, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 5, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 5, GETDATE()), 101)     
+ELSE CONVERT(varchar, DATEADD(day, 3, GETDATE()), 101)
+END as email_3DAfterEntry
+/* 4 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Tuesday' THEN CONVERT(varchar, DATEADD(day, 6, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 6, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 6, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 6, GETDATE()), 101)
+ELSE CONVERT(varchar, DATEADD(day, 4, GETDATE()), 101)
+END as email_4DAfterEntry
+/* 5 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Monday' THEN CONVERT(varchar, DATEADD(day, 7, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Tuesday' THEN CONVERT(varchar, DATEADD(day, 7, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 7, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 7, GETDATE()), 101)
+ELSE CONVERT(varchar, DATEADD(day, 7, GETDATE()), 101)
+END as email_5DAfterEntry
+/* 6 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Monday' THEN CONVERT(varchar, DATEADD(day, 8, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Tuesday' THEN CONVERT(varchar, DATEADD(day, 8, GETDATE()), 101)  
+WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 8, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 8, GETDATE()), 101)
+ELSE CONVERT(varchar, DATEADD(day, 10, GETDATE()), 101)
+END as email_6DAfterEntry
+/* 7 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Monday' THEN CONVERT(varchar, DATEADD(day, 9, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Tuesday' THEN CONVERT(varchar, DATEADD(day, 9, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 9, GETDATE()), 101) 
+ELSE CONVERT(varchar, DATEADD(day, 11, GETDATE()), 101)
+END as email_7DAfterEntry
+/* 8 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Monday' THEN CONVERT(varchar, DATEADD(day, 10, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Tuesday' THEN CONVERT(varchar, DATEADD(day, 10, GETDATE()), 101) 
+ELSE CONVERT(varchar, DATEADD(day, 12, GETDATE()), 101)
+END as email_8DAfterEntry
+/* 9 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Monday' THEN CONVERT(varchar, DATEADD(day, 11, GETDATE()), 101) 
+ELSE CONVERT(varchar, DATEADD(day, 13, GETDATE()), 101)
+END as email_9DAfterEntry
+/* 10 Days after Entry */
+,CONVERT(varchar, DATEADD(day, 14, GETDATE()), 101) as email_10DAfterEntry
+/* 11 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 17, GETDATE()), 101) 
+ELSE CONVERT(varchar, DATEADD(day, 15, GETDATE()), 101) 
+END as email_11DAfterEntry
+/* 12 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 18, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 18, GETDATE()), 101)     
+ELSE CONVERT(varchar, DATEADD(day, 16, GETDATE()), 101)
+END as email_12DAfterEntry
+/* 13 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 19, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 19, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 19, GETDATE()), 101)     
+ELSE CONVERT(varchar, DATEADD(day, 17, GETDATE()), 101)
+END as email_13DAfterEntry
+/* 14 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Tuesday' THEN CONVERT(varchar, DATEADD(day, 20, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 20, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 20, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 20, GETDATE()), 101)
+ELSE CONVERT(varchar, DATEADD(day, 18, GETDATE()), 101)
+END as email_14DAfterEntry
+/* 15 Days after Entry */
+,CONVERT(varchar, DATEADD(day, 21, GETDATE()), 101) as email_15DAfterEntry
+/* 16 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 24, GETDATE()), 101)
+ELSE CONVERT(varchar, DATEADD(day, 22, GETDATE()), 101)
+END as email_16DAfterEntry
+/* 17 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 25, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 25, GETDATE()), 101) 
+ELSE CONVERT(varchar, DATEADD(day, 23, GETDATE()), 101)
+END as email_17DAfterEntry
+/* 18 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 26, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 26, GETDATE()), 101)  
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 26, GETDATE()), 101) 
+ELSE CONVERT(varchar, DATEADD(day, 24, GETDATE()), 101)
+END as email_18DAfterEntry
+/* 19 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Tuesday' THEN CONVERT(varchar, DATEADD(day, 27, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 27, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 27, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 27, GETDATE()), 101)
+ELSE CONVERT(varchar, DATEADD(day, 25, GETDATE()), 101)
+END as email_19DAfterEntry
+/* 20 Days after Entry */
+,CONVERT(varchar, DATEADD(day, 28, GETDATE()), 101) as email_20DAfterEntry
+/* 21 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 31, GETDATE()), 101) 
+ELSE CONVERT(varchar, DATEADD(day, 29, GETDATE()), 101) 
+END as email_21DAfterEntry
+/* 22 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 32, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 32, GETDATE()), 101)     
+ELSE CONVERT(varchar, DATEADD(day, 30, GETDATE()), 101)
+END as email_22DAfterEntry
+/* 23 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 33, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 33, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 33, GETDATE()), 101)     
+ELSE CONVERT(varchar, DATEADD(day, 31, GETDATE()), 101)
+END as email_23DAfterEntry
+/* 24 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Tuesday' THEN CONVERT(varchar, DATEADD(day, 34, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 34, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 34, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 34, GETDATE()), 101)
+ELSE CONVERT(varchar, DATEADD(day, 32, GETDATE()), 101)
+END as email_24DAfterEntry
+/* 25 Days after Entry */
+,CONVERT(varchar, DATEADD(day, 35, GETDATE()), 101) as email_25DAfterEntry
+/* 26 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 38, GETDATE()), 101) 
+ELSE CONVERT(varchar, DATEADD(day, 36, GETDATE()), 101) 
+END as email_26DAfterEntry
+/* 27 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 39, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 39, GETDATE()), 101)     
+ELSE CONVERT(varchar, DATEADD(day, 37, GETDATE()), 101)
+END as email_27DAfterEntry
+/* 28 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 40, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 40, GETDATE()), 101) 
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 40, GETDATE()), 101)     
+ELSE CONVERT(varchar, DATEADD(day, 38, GETDATE()), 101)
+END as email_28DAfterEntry
+/* 29 Days after Entry */
+,CASE WHEN DATENAME(Weekday, GETDATE()) = 'Tuesday' THEN CONVERT(varchar, DATEADD(day, 41, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Wednesday' THEN CONVERT(varchar, DATEADD(day, 41, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Thursday' THEN CONVERT(varchar, DATEADD(day, 41, GETDATE()), 101)
+WHEN DATENAME(Weekday, GETDATE()) = 'Friday' THEN CONVERT(varchar, DATEADD(day, 41, GETDATE()), 101)
+ELSE CONVERT(varchar, DATEADD(day, 39, GETDATE()), 101)
+END as email_29DAfterEntry
+/* 30 Days after Entry */
+,CONVERT(varchar, DATEADD(day, 42, GETDATE()), 101) as email_30DAfterEntry
+from ent.OneRecordDE
