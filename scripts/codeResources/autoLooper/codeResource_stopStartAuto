@@ -1,0 +1,96 @@
+<script runat="server">
+  // resource handles automation looping if there are entries left to process
+  // contains a stop auto, wait function, and start auto 
+
+  Platform.Load("core", "1");
+
+  var break2 = '<br><br>',
+      jsBreak2 = '\r\n\r\n',
+      errDE = 'cldAppErrCatch';
+
+  var prox = new Script.Util.WSProxy();
+  var waitTime = (60000 * .25); // Wait 15s
+
+  try {
+
+    // Get the Form Submission Data from JSON POST
+    var data = Platform.Request.GetPostData();
+    data = Platform.Function.ParseJSON(data);
+    //Write('data: '+Stringify(data));
+    
+    if(data){
+
+      //var parsedData = Platform.Function.ParseJSON(postedData);
+      var autoCK = data.autoCK;
+     
+      //Write('data: '+data+break2);
+      //Write('autoCK: '+autoCK+break2);
+
+      var stopAuto = manageAuto(autoCK,'stop');
+      //Write('stopAuto: '+Stringify(stopAuto)+jsBreak2);
+      sleep(waitTime); //Wait 
+      var startAuto = manageAuto(autoCK,'start');
+      //Write('startAuto: '+Stringify(startAuto)+jsBreak2);
+
+    }// postedData check
+
+  }catch(e){
+    //Write(Stringify(e));
+    handleError(e);
+  }
+
+  //FUNCTIONS 
+  // sleep
+  function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+      if ((new Date().getTime() - start) > milliseconds){
+        break;
+      }
+    }
+  }
+
+  // manageAuto
+  function manageAuto(ck,startOrStop){
+
+    var name = name, //name of main automation
+        cols = ["ProgramID", "Name", "Status"],
+        filter = {
+          Property: "CustomerKey",
+          SimpleOperator: "equals",
+          Value: ck
+        };
+
+    var request = prox.retrieve("Automation", cols, filter); //retrieve automation to get programID
+
+    var objId = request.Results[0].ObjectID,
+        props = {
+          ObjectID: objId
+        },
+        action = ["start","stop"],
+        mngAction = startOrStop == 'start' ? 0 :  1,
+        opts = {};
+
+    var request = prox.performItem("Automation", props, action[mngAction], opts); // action[0] == start; action[1] == stop auto;
+    return request;
+    //Write(Stringify(request)); 
+  }
+  //END manageAuto
+  
+    //handle error
+  function handleError(error) {
+    if (debug) {
+      debugValue('Found error', error);
+    } else {
+
+      // Remember that if your Logging Data Extension is in Shared Folder, you need to add the "ENT." prefix to name
+      Platform.Function.InsertData(
+        errDE,
+        ['id', 'errorMessage', 'errorDescription'],
+        [GUID(), Stringify(error.message), Stringify(error.description)]
+
+      );
+    }
+  }//handle error
+
+</script>
