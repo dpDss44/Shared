@@ -1,0 +1,86 @@
+<script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  var break2 = "<br><br>",
+      prox = new Script.Util.WSProxy();
+  
+  var deName = 'sssss', // name of de to count from if entries are left to process
+      autoCK = 'sssss', // customerKey of automation to stop and restart here
+      crURL = 'ssss'; // URL of code resource we are posting to
+
+  try {
+    
+    var rc = ampScript('set @response = rowcount(LookupRows("'+deName+'","processed",false))');
+    //Write('rc: '+rc+break2);
+    
+    if(rc<1){// Stop auto if rc < 1
+      
+      // Stop automation only after any logging calls have been sucessfully comnpleted
+      var stopAuto = stopAuto(autoCK);
+      //Write(Stringify(stopAuto));
+
+    }else if(rc>0){ // if rowcount > 0, there are still entries left to process - restart auto to continue processing
+
+      // prep for POST
+      var authToken,
+          bearerToken = "Bearer "+ authToken,
+          url = crURL, // code resource URL
+          payload =  {'autoCK':autoCK};
+
+      // POST: start ENT p2 auto
+      var req = new Script.Util.HttpRequest(url);
+      req.emptyContentHandling = 0;
+      req.retries = 2;
+      req.continueOnError = true;
+      req.contentType = "application/json; charset=utf-8";
+      req.setHeader("Authorization", bearerToken);
+      req.setHeader("accept", "application/json");
+      req.method = "POST"; // You can change the method here
+      req.postData = Stringify(payload);
+
+      var resp = req.send();
+      var resultJSON = Platform.Function.ParseJSON(String(resp.content));
+      //Write('resultJSON: '+resultJSON+break2);
+     
+
+    }// rowcount check
+    
+  }catch(e){
+    Write(Stringify(e));
+  }
+  //FUNCTIONS
+  
+  //ampScript
+  function ampScript(code) {
+        var ampBlock = '\%\%[' + code + ']\%\%';
+        Platform.Function.TreatAsContent(ampBlock);
+        return Variable.GetValue('@response');
+    };
+  //END ampScript
+  
+  // stopAuto
+  function stopAuto(ck){
+
+    var name = name, //name of main automation
+        cols = ["ProgramID", "Name", "Status"],
+        filter = {
+          Property: "CustomerKey",
+          SimpleOperator: "equals",
+          Value: ck
+        };
+
+    var request = prox.retrieve("Automation", cols, filter); //retrieve automation to get programID
+
+    var objId = request.Results[0].ObjectID,
+        props = {
+          ObjectID: objId
+        },
+        action = ["start","stop"],
+        opts = {};
+
+    var request = prox.performItem("Automation", props, action[1], opts); // action[0] == start; action[1] == stop auto;
+
+    return(request); 
+  }
+  //END stopAuto
+</script>
