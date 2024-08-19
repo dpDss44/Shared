@@ -12,7 +12,7 @@
          </Schedule>
          <Interactions>
             <Interaction xsi:type="Automation">
-               <ObjectID>!!!automation #2 object id!!</ObjectID>
+               <ObjectID>!!!automation #21 object id!!</ObjectID>
             </Interaction>
             <Interaction xsi:type="Automation">
                <ObjectID>!!!automation #2 object id!!</ObjectID>
